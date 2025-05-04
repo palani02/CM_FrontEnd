@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+// Forgot password
 export function Forgot() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -14,11 +14,10 @@ export function Forgot() {
     const data = { email, currentPassword, newPassword, role };
 
     try {
+      
       const response = await fetch(`http://localhost:8088/api/auth/forgot-password`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
@@ -38,141 +37,158 @@ export function Forgot() {
 
   return (
     <>
-      <div className="forgot-container">
-        <div className="forgot-box">
-          <h1 className="forgot-title">Reset Your Password</h1>
+      <div className="login-container">
+        <div className="login-card">
+          <h2 className="login-title">Reset Your Password</h2>
 
-          <form onSubmit={handleForgotPassword} className="forgot-form">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="forgot-input"
-            />
+          <form onSubmit={handleForgotPassword} className="login-form">
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
 
-            <input
-              type="password"
-              placeholder="Enter current password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              required
-              className="forgot-input"
-            />
+            <div className="form-group">
+              <label>Current Password</label>
+              <input
+                type="password"
+                placeholder="Enter current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </div>
 
-            <input
-              type="password"
-              placeholder="Enter new password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              className="forgot-input"
-            />
+            <div className="form-group">
+              <label>New Password</label>
+              <input
+                type="password"
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+            </div>
 
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="forgot-input"
-            >
-              <option value="student">Student</option>
-              <option value="admin">Admin</option>
-            </select>
+            <div className="form-group">
+              <label>Role</label>
+              <select value={role} onChange={(e) => setRole(e.target.value)}>
+                <option value="student">Student</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
 
-            <button type="submit" className="forgot-button">
-              Change Password
-            </button>
+            <button type="submit" className="login-button">Change Password</button>
           </form>
 
-          <p className="forgot-footer">
-            Remember your password?{' '}
-            <a href="/" className="forgot-link">
-              Login here
-            </a>
-          </p>
+          <div className="login-links">
+            Remember your password? <a href="/">Login here</a>
+          </div>
         </div>
       </div>
 
-      {/* PURE CSS STYLING */}
       <style>{`
-        .forgot-container {
+        html, body {
+          margin: 0;
+          padding: 0;
+          height: 100%;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .login-container {
+          width: 100%;
           min-height: 100vh;
-          background: linear-gradient(to bottom right, #eef2ff, #f5f3ff);
+          background: linear-gradient(to top right, #003366, #3366cc);
           display: flex;
-          align-items: center;
           justify-content: center;
-          font-family: 'Segoe UI', sans-serif;
+          align-items: center;
           padding: 20px;
         }
 
-        .forgot-box {
-          background: white;
+        .login-card {
+          background-color: #ffffff;
           padding: 30px;
           border-radius: 12px;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           width: 100%;
           max-width: 400px;
-          text-align: center;
         }
 
-        .forgot-title {
+        .login-title {
           font-size: 24px;
-          font-weight: bold;
-          color: #333;
-          margin-bottom: 24px;
+          font-weight: 700;
+          text-align: center;
+          margin-bottom: 20px;
+          color: #003366;
         }
 
-        .forgot-form {
+        .login-form {
           display: flex;
           flex-direction: column;
           gap: 15px;
         }
 
-        .forgot-input {
-          padding: 12px;
-          border: 1px solid #ccc;
-          border-radius: 8px;
-          font-size: 14px;
+        .form-group {
+          display: flex;
+          flex-direction: column;
         }
 
-        .forgot-button {
-          background-color: #3b82f6;
-          color: white;
-          border: none;
-          padding: 12px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 500;
-          transition: background-color 0.3s ease;
-        }
-
-        .forgot-button:hover {
-          background-color: #2563eb;
-        }
-
-        .forgot-footer {
-          margin-top: 20px;
-          font-size: 14px;
+        .form-group label {
+          margin-bottom: 5px;
           color: #555;
         }
 
-        .forgot-link {
-          color: #3b82f6;
+        .form-group input,
+        .form-group select {
+          padding: 12px;
+          border: 1px solid #cccccc;
+          border-radius: 8px;
+          font-size: 14px;
+          color: #003366;
+          background-color: #f4f4f4;
+          transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+          border-color: #1e90ff;
+          outline: none;
+        }
+
+        .login-button {
+          padding: 12px;
+          background-color: #1e90ff;
+          color: white;
+          font-weight: bold;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+
+        .login-button:hover {
+          background-color: #4682b4;
+        }
+
+        .login-links {
+          margin-top: 15px;
+          text-align: center;
+          font-size: 14px;
+          color: #003366;
+        }
+
+        .login-links a {
+          color: #1e90ff;
           text-decoration: none;
         }
 
-        .forgot-link:hover {
+        .login-links a:hover {
           text-decoration: underline;
-        }
-
-        @media (max-width: 480px) {
-          .forgot-box {
-            padding: 20px;
-          }
-
-          .forgot-title {
-            font-size: 20px;
-          }
         }
       `}</style>
     </>

@@ -13,8 +13,9 @@ import {Forgot} from "../pages/common/Forgot";
 
 export default function AppRoutes() {
   return (
+    // Entire Project Routes are here
     <Routes>
-      <Route path="/" element={<RoleSelection />} />
+      <Route path="/" element={<RoleSelection />} />   
       <Route path="/login" element={<Login />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/enroll" element={<EnrollCourse />} />
@@ -24,5 +25,6 @@ export default function AppRoutes() {
       <Route path="/Register" element={<Register/>}/>
       <Route path="/Forgot" element={<Forgot/>}/>
     </Routes>
+    // based on the matches path, it will be redirect
   );
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+// New student registration page
 export function Register() {
+ 
   const navigate = useNavigate();
   
   const [email, setEmail] = useState('');
@@ -26,7 +27,7 @@ export function Register() {
 
       if (response.ok) {
         alert(result.message);
-        navigate('/'); // Redirect to login after success
+        navigate('/');  
       } else {
         alert(result.message || 'Registration failed');
       }
@@ -73,94 +74,94 @@ export function Register() {
         </div>
       </div>
 
-      {/* PURE CSS Styling */}
-      <style>{`
-        .register-container {
-          min-height: 100vh;
-          background: linear-gradient(to bottom right, #e0f2fe, #f0f9ff);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-family: 'Segoe UI', sans-serif;
-          padding: 20px;
-        }
+     <style>{`
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+  }
 
-        .register-box {
-          background: white;
-          padding: 30px;
-          border-radius: 12px;
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-          width: 100%;
-          max-width: 400px;
-          text-align: center;
-        }
+  .register-container {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(to top right, #003366, #3366cc);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
 
-        .register-title {
-          font-size: 26px;
-          font-weight: bold;
-          color: #1e40af;
-          margin-bottom: 25px;
-        }
+  .register-box {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+  }
 
-        .register-form {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
+  .register-title {
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #003366;
+  }
 
-        .register-input {
-          padding: 12px;
-          border: 1px solid #ccc;
-          border-radius: 8px;
-          font-size: 14px;
-          transition: border-color 0.3s;
-        }
+  .register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
 
-        .register-input:focus {
-          border-color: #3b82f6;
-          outline: none;
-        }
+  .register-input {
+    padding: 12px;
+    border: 1px solid #cccccc;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #003366;
+    background-color: #f4f4f4;
+    transition: border-color 0.3s;
+  }
 
-        .register-button {
-          background-color: #3b82f6;
-          color: white;
-          border: none;
-          padding: 12px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 500;
-          transition: background-color 0.3s ease;
-        }
+  .register-input:focus {
+    border-color: #1e90ff;
+    outline: none;
+  }
 
-        .register-button:hover {
-          background-color: #2563eb;
-        }
+  .register-button {
+    padding: 12px;
+    background-color: #1e90ff;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
 
-        .register-footer {
-          margin-top: 20px;
-          font-size: 14px;
-          color: #555;
-        }
+  .register-button:hover {
+    background-color: #4682b4;
+  }
 
-        .register-link {
-          color: #3b82f6;
-          text-decoration: none;
-        }
+  .register-footer {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+    color: #003366;
+  }
 
-        .register-link:hover {
-          text-decoration: underline;
-        }
+  .register-link {
+    color: #1e90ff;
+    text-decoration: none;
+  }
 
-        @media (max-width: 480px) {
-          .register-box {
-            padding: 20px;
-          }
+  .register-link:hover {
+    text-decoration: underline;
+  }
+`}</style>
 
-          .register-title {
-            font-size: 22px;
-          }
-        }
-      `}</style>
     </>
   );
 }

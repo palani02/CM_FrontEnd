@@ -1,101 +1,78 @@
 import { useEffect, useState } from 'react';
-
+import { useLocation } from 'react-router-dom';
+// If credential matches, then student redirect here.
+// Student Dashboard
 export function Dashboard() {
+  // Hooks
   const [availableCourses, setAvailableCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [enrollingIds, setEnrollingIds] = useState([]);
-
-  const studentEmail = "student@example.com"; // Replace with real email if needed
+  const [activeTab, setActiveTab] = useState('available');
+  const location = useLocation();
+  const studentEmail = location.state?.userEmail || "";
 
   useEffect(() => {
-    fetchAvailableCourses();
-    fetchEnrolledCourses();
+    console.log("Email used in fetchCourses:", studentEmail);
+    fetchCourses();
   }, []);
 
-  const fetchAvailableCourses = async () => {
+  const fetchCourses = async () => {
+    setLoading(true);
     try {
-      const response = await fetch('http://localhost:8088/api/courses/available');
-      const data = await response.json();
-      setAvailableCourses(data);
-    } catch (error) {
-      console.error('Error fetching available courses:', error);
-    }
-  };
+      const [availableRes, enrolledRes] = await Promise.all([
+        fetch(`http://localhost:8088/api/courses/available?studentEmail=${studentEmail}`),
+        fetch(`http://localhost:8088/api/courses/enrolled?studentEmail=${studentEmail}`)
+      ]);
 
-  const fetchEnrolledCourses = async () => {
-    try {
-      const response = await fetch(`http://localhost:8088/api/courses/enrolled?studentEmail=${studentEmail}`);
-      const data = await response.json();
-      setEnrolledCourses(data);
+      const availableData = await availableRes.json();
+      const enrolledData = await enrolledRes.json();
+
+      setAvailableCourses(availableData);
+      setEnrolledCourses(enrolledData);
     } catch (error) {
-      console.error('Error fetching enrolled courses:', error);
+      console.error('Error fetching courses:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleEnroll = async (courseId) => {
-    if (enrollingIds.includes(courseId)) return; // Prevent multiple clicks
-
-    setEnrollingIds((prev) => [...prev, courseId]);
-
+    if (enrollingIds.includes(courseId)) return;
+    setEnrollingIds(prev => [...prev, courseId]);
     try {
-      const response = await fetch('http://localhost:8088/api/courses/enroll', {
+      const res = await fetch('http://localhost:8088/api/courses/enroll', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: studentEmail, courseId }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: studentEmail, courseId })
       });
-
-      if (response.ok) {
+      if (res.ok) {
         alert('Successfully enrolled in course!');
-        const enrolledCourse = availableCourses.find((c) => c.id === courseId);
-        setEnrolledCourses((prev) => [...prev, enrolledCourse]);
-
-        // Optionally update available courses to reflect slot change
-        setAvailableCourses((prev) =>
-          prev.map((course) =>
-            course.id === courseId
-              ? { ...course, filledSlots: course.filledSlots + 1 }
-              : course
-          )
-        );
+        fetchCourses(); 
       } else {
-        const result = await response.json();
-        alert(result.message || 'Failed to enroll in the course');
+        const errorData = await res.json();
+        alert(errorData.message || 'Failed to enroll');
       }
     } catch (error) {
       console.error('Error during enrollment:', error);
     } finally {
-      setEnrollingIds((prev) => prev.filter((id) => id !== courseId));
+      // No matter error happens or not, this statement execute
+      setEnrollingIds(prev => prev.filter(id => id !== courseId));
     }
   };
 
   const handleUnenroll = async (courseId) => {
     try {
-      const response = await fetch('http://localhost:8088/api/courses/unenroll', {
+      const res = await fetch('http://localhost:8088/api/courses/unenroll', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: studentEmail, courseId }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: studentEmail, courseId })
       });
-
-      if (response.ok) {
-        alert('Successfully unenrolled from course!');
-        setEnrolledCourses((prev) => prev.filter((c) => c.id !== courseId));
-
-        setAvailableCourses((prev) =>
-          prev.map((course) =>
-            course.id === courseId
-              ? { ...course, filledSlots: course.filledSlots - 1 }
-              : course
-          )
-        );
+      if (res.ok) {
+        alert('Successfully unenrolled!');
+        fetchCourses();  
       } else {
-        alert('Failed to unenroll from the course');
+        alert('Failed to unenroll');
       }
     } catch (error) {
       console.error('Error during unenrollment:', error);
@@ -103,237 +80,235 @@ export function Dashboard() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('userEmail');
     window.location.href = "/";
   };
 
   return (
     <>
-      <div className="dashboard-container">
-        <div className="top-bar">
-          <div className="profile-section">
-            <img src="https://cdn-icons-png.flaticon.com/512/6522/6522516.png" alt="Profile" className="profile-image" />
-            <button className="logout-button" onClick={handleLogout}>Logout</button>
-          </div>
-        </div>
+      <header>
+        <h1>Student Dashboard</h1>
+        <button onClick={handleLogout}>Logout</button>
+      </header>
 
-        {loading ? (
-          <div className="loading-spinner">Loading...</div>
-        ) : (
-          <>
-            <h2 className="section-title">Available Courses</h2>
-            <div className="course-grid">
-              {availableCourses.map((course) => {
-                const isFull = course.filledSlots >= course.totalSlots;
-                const isEnrolled = enrolledCourses.some((enrolled) => enrolled.id === course.id);
-                const isEnrolling = enrollingIds.includes(course.id);
+      <div className="layout">
+      {/* Student Sidebar */}
+        <aside>
+          <h2>Dashboard</h2>
+          <button onClick={() => setActiveTab('available')} className={activeTab === 'available' ? 'active' : ''}>Available Courses</button>
+          <button onClick={() => setActiveTab('enrolled')} className={activeTab === 'enrolled' ? 'active' : ''}>My Enrolled Courses</button>
+        </aside>
 
-                return (
-                  <div key={course.id} className="course-card">
-                    <h3 className="course-name">{course.name}</h3>
-                    <p><strong>Duration:</strong> {course.duration}</p>
-                    <p><strong>Sessions:</strong> {course.session}</p>
-                    <p><strong>Total Slots:</strong> {course.totalSlots}</p>
-                    <p><strong>Filled:</strong> {course.filledSlots}</p>
-                    <p><strong>Remaining:</strong> {course.totalSlots - course.filledSlots}</p>
-
-                    {isFull ? (
-                      <span className="course-status full">Course Full</span>
-                    ) : isEnrolled ? (
-                      <button className="enroll-button enrolled" disabled>Enrolled</button>
-                    ) : (
-                      <button
-                        className="enroll-button"
-                        onClick={() => handleEnroll(course.id)}
-                        disabled={isEnrolling}
-                      >
-                        {isEnrolling ? 'Enrolling...' : 'Enroll'}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <h2 className="section-title">My Enrolled Courses</h2>
-            <div className="enrolled-list">
-              {enrolledCourses.length === 0 ? (
-                <p className="empty-message">You are not enrolled in any courses.</p>
-              ) : (
-                enrolledCourses.map((course) => (
-                  <div key={course.id} className="enrolled-card">
-                    <span>{course.name}</span>
-                    <button
-                      onClick={() => handleUnenroll(course.id)}
-                      className="unenroll-button"
-                    >
-                      Unenroll
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </>
-        )}
+        <main>
+          {loading ? (
+            <div className="loading-indicator">Loading...</div>
+          ) : activeTab === 'available' ? (
+            <>
+              <h2>Available Courses</h2>
+              <div className="course-grid">
+                {availableCourses.length === 0 ? (
+                  <p>No courses available for you right now.</p>
+                ) : (
+                  availableCourses.map(course => {
+                    const isFull = course.filledSlots >= course.totalSlots;
+                    const isEnrolled = enrolledCourses.some(c => c.id === course.id);
+                    const isEnrolling = enrollingIds.includes(course.id);
+                    return (
+                      <div key={course.id} className={`course-card ${isFull ? 'full' : isEnrolled ? 'enrolled' : 'available'}`}>
+                        <h3>{course.name}</h3>
+                        <p><strong>Duration:</strong> {course.duration}</p>
+                        <p><strong>Total Slots:</strong> {course.totalSlots}</p>
+                        <p><strong>Remaining:</strong> {course.totalSlots - course.filledSlots}</p>
+                        {isFull ? (
+                          <span>Course Full</span>
+                        ) : isEnrolled ? (
+                          <button disabled>Enrolled</button>
+                        ) : (
+                          <button onClick={() => handleEnroll(course.id)} disabled={isEnrolling}>
+                            {isEnrolling ? 'Enrolling...' : 'Enroll'}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <h2>My Enrolled Courses</h2>
+              <div className="enrolled-grid">
+                {enrolledCourses.length === 0 ? (
+                  <p>You are not enrolled in any courses.</p>
+                ) : (
+                  enrolledCourses.map(course => (
+                    <div key={course.id} className="enrolled-card">
+                      <span>{course.name}</span>
+                      <button onClick={() => handleUnenroll(course.id)}>Unenroll</button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+        </main>
       </div>
-    
-      <style>{`
-        .dashboard-container {
-          min-height: 100vh;
-          background-color: #f9fafb;
-          padding: 40px 20px;
-          font-family: 'Segoe UI', sans-serif;
-          color: #333;
-        }
 
-        .top-bar {
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          margin-bottom: 20px;
-        }
+    <style>{`
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #F0FAFF; /* light blue background from Add Course */
+    margin: 0;
+    padding: 0;
+  }
 
-        .profile-section {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2196F3; /* solid blue from Add Course */
+    color: white;
+    padding: 0 20px;
+    font-size: 18px;
+    z-index: 1000;
+  }
 
-        .profile-image {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-        }
+  button {
+    background-color: #F44336; /* solid red from Add Course */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
 
-        .logout-button {
-          background-color: #6366f1;
-          color: white;
-          border: none;
-          padding: 6px 12px;
-          border-radius: 6px;
-          cursor: pointer;
-          transition: background-color 0.3s ease;
-        }
+  button:hover {
+    background-color: #D32F2F; /* darker red for hover */
+  }
 
-        .logout-button:hover {
-          background-color: #4f46e5;
-        }
+  .layout {
+    display: flex;
+    min-height: 100vh;
+    padding-top: 70px;
+  }
 
-        .section-title {
-          font-size: 24px;
-          font-weight: bold;
-          color: #4f46e5;
-          margin-bottom: 20px;
-        }
+  aside {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 260px;
+    background: #DFF6FF; /* light blue from Add Course */
+    color: #1A1A1A;
+    padding: 30px 20px;
+    height: calc(100vh - 70px);
+    z-index: 999;
+  }
 
-        .course-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 20px;
-          margin-bottom: 40px;
-        }
+  aside button {
+    background: transparent;
+    color: #4CAF50; /* green accent from Add Course */
+    border: none;
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
 
-        .course-card {
-          background-color: white;
-          padding: 20px;
-          border-radius: 10px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
+  aside button.active {
+    background-color: #4CAF50; /* solid green from Add Course */
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+  }
 
-        .course-name {
-          font-size: 18px;
-          color: #2563eb;
-          font-weight: 600;
-          margin-bottom: 10px;
-        }
+  main {
+    flex: 1;
+    margin-left: 300px;
+    padding: 50px 40px;
+    background: #FFFFFF; /* white background for main content */
+    height: calc(100vh - 70px);
+    overflow-y: auto;
+  }
 
-        .enroll-button {
-          background-color: #10b981;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 6px;
-          cursor: pointer;
-          margin-top: 12px;
-          transition: background-color 0.3s ease;
-        }
+  .course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
 
-        .enroll-button:hover {
-          background-color: #059669;
-        }
+  .course-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
 
-        .enroll-button.enrolled {
-          background-color: #cbd5e1;
-          color: #1e293b;
-          cursor: not-allowed;
-        }
+  .course-card:hover {
+    transform: translateY(-5px);
+  }
 
-        .course-status.full {
-          display: inline-block;
-          padding: 8px 16px;
-          margin-top: 12px;
-          background-color: #f87171;
-          color: white;
-          border-radius: 6px;
-          font-weight: 500;
-        }
+  .course-card.full {
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+  }
 
-        .enrolled-list {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
+  .course-card.enrolled {
+    background-color: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+  }
 
-        .enrolled-card {
-          background-color: white;
-          padding: 15px 20px;
-          border-radius: 8px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
-        }
+  .course-card.available {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #1f2937;
+  }
 
-        .unenroll-button {
-          background-color: #ef4444;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 6px;
-          cursor: pointer;
-          transition: background-color 0.3s ease;
-        }
+  .course-card.full button,
+  .course-card.enrolled button {
+    background-color: #d1d5db;
+    color: #6b7280;
+    cursor: not-allowed;
+  }
 
-        .unenroll-button:hover {
-          background-color: #dc2626;
-        }
+  .enrolled-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
 
-        .empty-message {
-          color: #666;
-        }
+  .enrolled-card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-        .loading-spinner {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 50vh;
-          font-size: 18px;
-          color: #555;
-        }
+  button[disabled] {
+    background-color: #A2A2A2;
+    cursor: not-allowed;
+  }
 
-        @media (max-width: 600px) {
-          .course-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .section-title {
-            text-align: center;
-          }
-
-          .top-bar {
-            justify-content: center;
-          }
-        }
-      `}</style>
+  .loading-indicator {
+    text-align: center;
+    font-size: 20px;
+    color: #2196F3;
+  }
+`}</style>
     </>
   );
 }

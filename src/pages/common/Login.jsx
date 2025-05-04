@@ -1,6 +1,6 @@
-import { useState } from 'react';
+ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
+// Common Login page for both "Student" and "Admin", based on the Role it redirect
 export function Login() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -15,19 +15,20 @@ export function Login() {
     const loginData = { email, password, role };
 
     try {
+      // until get the response it wait(await)
       const response = await fetch(`http://localhost:8088/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(loginData),
+        body: JSON.stringify(loginData), // convert object into json
       });
 
       const result = await response.json();
 
       if (response.ok && result.status === "success") {
         if (result.role === "student") {
-          navigate('/dashboard');
+navigate('/dashboard', { state: { userEmail: email } });
         } else if (result.role === "admin") {
           navigate('/add-course');
         }
@@ -45,7 +46,7 @@ export function Login() {
       <div className="login-container">
         <div className="login-card">
           <h2 className="login-title">
-            Sign In as <span className="login-role">{role || 'User'}</span>
+            Log In as <span className="login-role">{role || 'User'}</span>
           </h2>
 
           <form onSubmit={handleLogin} className="login-form">
@@ -87,20 +88,27 @@ export function Login() {
         </div>
       </div>
 
-      {/* Pure CSS Styling */}
+       
       <style>{`
-        .login-container {
-          min-height: 100vh;
-          background: linear-gradient(to top right, #f0f4ff, #ffffff);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          font-family: 'Segoe UI', sans-serif;
-          padding: 20px;
-        }
+        html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .login-container {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(to top right, #003366, #3366cc); /* Blueish gradient */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
 
         .login-card {
-          background-color: white;
+          background-color: #ffffff; /* White background for the card */
           padding: 30px;
           border-radius: 12px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -110,14 +118,14 @@ export function Login() {
 
         .login-title {
           font-size: 24px;
-          font-weight: 600;
+          font-weight: 700;
           text-align: center;
           margin-bottom: 20px;
-          color: #333;
+          color: #003366;
         }
 
         .login-role {
-          color: #2563eb; /* nice blue */
+          color: #1e90ff; /* Lighter blue for the role */
         }
 
         .login-form {
@@ -137,21 +145,23 @@ export function Login() {
         }
 
         .form-group input {
-          padding: 10px 12px;
-          border: 1px solid #ccc;
+          padding: 12px;
+          border: 1px solid #cccccc; /* Light grey border */
           border-radius: 8px;
           font-size: 14px;
+          color: #003366; /* Dark text color */
+          background-color: #f4f4f4;
           transition: border-color 0.3s;
         }
 
         .form-group input:focus {
-          border-color: #2563eb;
+          border-color: #1e90ff; /* Blue focus border */
           outline: none;
         }
 
         .login-button {
           padding: 12px;
-          background-color: #2563eb;
+          background-color: #1e90ff; /* Blue button */
           color: white;
           font-weight: bold;
           border: none;
@@ -161,18 +171,18 @@ export function Login() {
         }
 
         .login-button:hover {
-          background-color: #1d4ed8;
+          background-color: #4682b4; /* Darker blue on hover */
         }
 
         .login-links {
           margin-top: 15px;
           text-align: center;
           font-size: 14px;
-          color: #666;
+          color: #003366;
         }
 
         .login-links a {
-          color: #2563eb;
+          color: #1e90ff; /* Blue links */
           text-decoration: none;
         }
 

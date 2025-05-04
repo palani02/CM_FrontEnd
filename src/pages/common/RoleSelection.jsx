@@ -1,18 +1,13 @@
 import { useNavigate } from 'react-router-dom';
-
+// First Page, Role Selection
 export function RoleSelection() {
   const navigate = useNavigate();
-
   return (
     <>
       <div className="role-container">
-        {/* Project Name */}
-        <h1 className="project-name">Course Management System</h1>
+        <h1 className="project-name">Course Scheduler System</h1>
+        <h2 className="role-title">Choose Your Role</h2>
 
-        {/* Page Title */}
-        <h2 className="role-title">Select Your Role</h2>
-
-        {/* Role Buttons */}
         <div className="role-buttons">
           <button
             onClick={() => navigate('/login?role=student')}
@@ -29,95 +24,98 @@ export function RoleSelection() {
         </div>
       </div>
 
-      {/* Pure CSS Styles */}
       <style>{`
+        body {
+          margin: 0;
+          font-family: 'Inter', sans-serif;
+        background: linear-gradient(to top right, #003366, #3366cc);
+        }
+
         .role-container {
           height: 100vh;
-          background: linear-gradient(to bottom right, #e0e7ff, #f3e8ff);
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
-          padding: 20px;
+          padding: 40px;
+          
         }
 
         .project-name {
-          font-size: 36px;
+          font-size: 48px;
           font-weight: 700;
-          color: #2b2b2b;
-          font-family: 'Georgia', 'Times New Roman', serif;
-          margin-bottom: 10px;
+          color: #e0f2fe;
+          margin-bottom: 20px;
           text-align: center;
-          letter-spacing: 0.5px;
         }
 
         .role-title {
-          font-size: 24px;
-          color: #444;
-          font-weight: 600;
-          margin-bottom: 30px;
+          font-size: 28px;
+          font-weight: 500;
+          color: #bae6fd;
+          margin-bottom: 40px;
           text-align: center;
         }
 
         .role-buttons {
           display: flex;
-          gap: 20px;
+          gap: 30px;
           flex-wrap: wrap;
           justify-content: center;
         }
 
         .role-button {
-          padding: 12px 28px;
-          font-size: 16px;
-          font-weight: 500;
+          padding: 16px 40px;
+          font-size: 18px;
+          font-weight: 600;
           color: #ffffff;
-          background-color: #6c63ff;
           border: none;
-          border-radius: 10px;
+          border-radius: 50px;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          transition: background-color 0.3s ease, transform 0.2s ease;
+          background-color: #334155;
+          transition: all 0.3s ease;
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
         }
 
         .role-button:hover {
-          transform: translateY(-3px);
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .student-button {
-          background-color: #4f46e5;
+          background-color: #3b82f6;
         }
 
         .student-button:hover {
-          background-color: #4338ca;
+          background-color: #2563eb;
         }
 
         .admin-button {
-          background-color: #9333ea;
+          background-color: #06b6d4;
         }
 
         .admin-button:hover {
-          background-color: #7e22ce;
+          background-color: #0891b2;
         }
 
-        @media (max-width: 500px) {
+        @media (max-width: 600px) {
           .role-buttons {
             flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            padding: 0 20px;
+            gap: 20px;
           }
 
           .role-button {
             width: 100%;
+            font-size: 16px;
+            padding: 14px 20px;
           }
 
           .project-name {
-            font-size: 28px;
+            font-size: 36px;
           }
 
           .role-title {
-            font-size: 20px;
+            font-size: 22px;
           }
         }
       `}</style>
