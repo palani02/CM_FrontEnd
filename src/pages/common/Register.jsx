@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 // New student registration page
 export function Register() {
- 
   const navigate = useNavigate();
-  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -27,7 +26,7 @@ export function Register() {
 
       if (response.ok) {
         alert(result.message);
-        navigate('/');  
+        navigate('/');
       } else {
         alert(result.message || 'Registration failed');
       }
@@ -39,129 +38,178 @@ export function Register() {
 
   return (
     <>
-      <div className="register-container">
-        <div className="register-box">
-          <h1 className="register-title">Register as Student</h1>
+      <div className="wrapper">
+        <div className="blur-bg"></div>
+        <div className="login-content">
+          <h1 className="headline">
+            Register as <span className="highlight">Student</span>
+          </h1>
 
-          <form onSubmit={handleRegister} className="register-form">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="register-input"
-            />
+          <form onSubmit={handleRegister} className="login-form">
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
 
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="register-input"
-            />
+            <div className="form-group">
+              <label>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
 
-            <button type="submit" className="register-button">
+            <button type="submit" className="login-button">
               Register
             </button>
           </form>
 
-          <p className="register-footer">
-            Already have an account?{' '}
-            <a href="/" className="register-link">Login here</a>
-          </p>
+          <div className="login-links">
+            Already have an account? <a href="/">Login here</a>
+          </div>
         </div>
       </div>
 
-     <style>{`
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    font-family: 'Inter', sans-serif;
-  }
+      <style>{`
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
 
-  .register-container {
-    width: 100%;
-    min-height: 100vh;
-    background: linear-gradient(to top right, #003366, #3366cc);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-  }
+        body, html {
+          height: 100%;
+          font-family: 'Inter', sans-serif;
+          background-color: #0f0f11;
+          color: white;
+        }
 
-  .register-box {
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
-  }
+        .wrapper {
+          height: 100vh;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background: radial-gradient(circle at top left, #1e1e26, #0f0f11);
+          position: relative;
+          overflow: hidden;
+        }
 
-  .register-title {
-    font-size: 24px;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 20px;
-    color: #003366;
-  }
+        .blur-bg {
+          position: absolute;
+          top: -200px;
+          left: -200px;
+          width: 600px;
+          height: 600px;
+          background: #3b82f6;
+          opacity: 0.2;
+          filter: blur(150px);
+          z-index: 0;
+        }
 
-  .register-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
+        .login-content {
+          z-index: 10;
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          padding: 40px;
+          width: 100%;
+          max-width: 400px;
+        }
 
-  .register-input {
-    padding: 12px;
-    border: 1px solid #cccccc;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #003366;
-    background-color: #f4f4f4;
-    transition: border-color 0.3s;
-  }
+        .headline {
+          font-size: 36px;
+          font-weight: 800;
+          margin-bottom: 30px;
+          text-align: center;
+          background: linear-gradient(to right, #3b82f6, #06b6d4);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
 
-  .register-input:focus {
-    border-color: #1e90ff;
-    outline: none;
-  }
+        .highlight {
+          color: #38bdf8;
+        }
 
-  .register-button {
-    padding: 12px;
-    background-color: #1e90ff;
-    color: white;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
+        .login-form {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
 
-  .register-button:hover {
-    background-color: #4682b4;
-  }
+        .form-group {
+          display: flex;
+          flex-direction: column;
+        }
 
-  .register-footer {
-    margin-top: 15px;
-    text-align: center;
-    font-size: 14px;
-    color: #003366;
-  }
+        .form-group label {
+          margin-bottom: 6px;
+          color: #cbd5e1;
+        }
 
-  .register-link {
-    color: #1e90ff;
-    text-decoration: none;
-  }
+        .form-group input {
+          padding: 12px;
+          border: 1px solid #475569;
+          border-radius: 10px;
+          background-color: #1e293b;
+          color: white;
+        }
 
-  .register-link:hover {
-    text-decoration: underline;
-  }
-`}</style>
+        .form-group input:focus {
+          outline: none;
+          border-color: #38bdf8;
+        }
 
+        .login-button {
+          padding: 14px;
+          background: linear-gradient(to right, #3b82f6, #06b6d4);
+          border: none;
+          border-radius: 10px;
+          font-weight: bold;
+          color: white;
+          cursor: pointer;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .login-button:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .login-links {
+          margin-top: 20px;
+          text-align: center;
+          font-size: 14px;
+          color: #94a3b8;
+        }
+
+        .login-links a {
+          color: #38bdf8;
+          text-decoration: none;
+        }
+
+        .login-links a:hover {
+          text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+          .headline {
+            font-size: 28px;
+          }
+
+          .login-content {
+            padding: 30px 20px;
+          }
+        }
+      `}</style>
     </>
   );
 }

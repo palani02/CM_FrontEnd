@@ -1,6 +1,6 @@
- import { useState } from 'react';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-// Common Login page for both "Student" and "Admin", based on the Role it redirect
+
 export function Login() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -15,20 +15,19 @@ export function Login() {
     const loginData = { email, password, role };
 
     try {
-      // until get the response it wait(await)
       const response = await fetch(`http://localhost:8088/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(loginData), // convert object into json
+        body: JSON.stringify(loginData),
       });
 
       const result = await response.json();
 
       if (response.ok && result.status === "success") {
         if (result.role === "student") {
-navigate('/dashboard', { state: { userEmail: email } });
+          navigate('/dashboard', { state: { userEmail: email } });
         } else if (result.role === "admin") {
           navigate('/add-course');
         }
@@ -43,39 +42,37 @@ navigate('/dashboard', { state: { userEmail: email } });
 
   return (
     <>
-      <div className="login-container">
-        <div className="login-card">
-          <h2 className="login-title">
-            Log In as <span className="login-role">{role || 'User'}</span>
-          </h2>
-
-          <form onSubmit={handleLogin} className="login-form">
+      <div className="wrapper">
+        <div className="blur-bg"></div>
+        <div className="login-content">
+          <h1 className="headline">Log In as <span className="highlight">{role || 'User'}</span></h1>
+          <form className="login-form" onSubmit={handleLogin}>
             <div className="form-group">
               <label>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="Enter your email"
-              />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
 
             <div className="form-group">
               <label>Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Enter your password"
-              />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
 
-            <button type="submit" className="login-button">
-              Login
-            </button>
+            <button className="login-button" type="submit">Login</button>
           </form>
+
+          <div className="social-login">
+            <p className="or-separator">or login with</p>
+            <div className="social-buttons">
+              <button className="social-button google" onClick={() => alert('Google login coming soon')}>
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" />
+                Google
+              </button>
+              <button className="social-button github" onClick={() => alert('GitHub login coming soon')}>
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" alt="GitHub" />
+                GitHub
+              </button>
+            </div>
+          </div>
 
           <div className="login-links">
             {role !== 'admin' && (
@@ -88,50 +85,72 @@ navigate('/dashboard', { state: { userEmail: email } });
         </div>
       </div>
 
-       
       <style>{`
-        html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    font-family: 'Inter', sans-serif;
-  }
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
 
-  .login-container {
-    width: 100%;
-    min-height: 100vh;
-    background: linear-gradient(to top right, #003366, #3366cc); /* Blueish gradient */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-  }
+        body, html {
+          height: 100%;
+          font-family: 'Inter', sans-serif;
+          background-color: #0f0f11;
+          color: white;
+        }
 
-        .login-card {
-          background-color: #ffffff; /* White background for the card */
-          padding: 30px;
-          border-radius: 12px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        .wrapper {
+          height: 100vh;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background: radial-gradient(circle at top left, #1e1e26, #0f0f11);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .blur-bg {
+          position: absolute;
+          top: -200px;
+          left: -200px;
+          width: 600px;
+          height: 600px;
+          background: #3b82f6;
+          opacity: 0.2;
+          filter: blur(150px);
+          z-index: 0;
+        }
+
+        .login-content {
+          z-index: 10;
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          padding: 40px;
           width: 100%;
           max-width: 400px;
         }
 
-        .login-title {
-          font-size: 24px;
-          font-weight: 700;
+        .headline {
+          font-size: 36px;
+          font-weight: 800;
+          margin-bottom: 30px;
           text-align: center;
-          margin-bottom: 20px;
-          color: #003366;
+          background: linear-gradient(to right, #3b82f6, #06b6d4);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
 
-        .login-role {
-          color: #1e90ff; /* Lighter blue for the role */
+        .highlight {
+          color: #38bdf8;
         }
 
         .login-form {
           display: flex;
           flex-direction: column;
-          gap: 15px;
+          gap: 20px;
         }
 
         .form-group {
@@ -140,54 +159,101 @@ navigate('/dashboard', { state: { userEmail: email } });
         }
 
         .form-group label {
-          margin-bottom: 5px;
-          color: #555;
+          margin-bottom: 6px;
+          color: #cbd5e1;
         }
 
         .form-group input {
           padding: 12px;
-          border: 1px solid #cccccc; /* Light grey border */
-          border-radius: 8px;
-          font-size: 14px;
-          color: #003366; /* Dark text color */
-          background-color: #f4f4f4;
-          transition: border-color 0.3s;
+          border: 1px solid #475569;
+          border-radius: 10px;
+          background-color: #1e293b;
+          color: white;
         }
 
         .form-group input:focus {
-          border-color: #1e90ff; /* Blue focus border */
           outline: none;
+          border-color: #38bdf8;
         }
 
         .login-button {
-          padding: 12px;
-          background-color: #1e90ff; /* Blue button */
-          color: white;
-          font-weight: bold;
+          padding: 14px;
+          background: linear-gradient(to right, #3b82f6, #06b6d4);
           border: none;
-          border-radius: 8px;
+          border-radius: 10px;
+          font-weight: bold;
+          color: white;
           cursor: pointer;
-          transition: background-color 0.3s ease;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .login-button:hover {
-          background-color: #4682b4; /* Darker blue on hover */
+          transform: translateY(-3px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .social-login {
+          margin-top: 30px;
+          text-align: center;
+        }
+
+        .or-separator {
+          margin-bottom: 10px;
+          color: #cbd5e1;
+        }
+
+        .social-buttons {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .social-button {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 16px;
+          border: 1px solid #475569;
+          border-radius: 8px;
+          background-color: #1e293b;
+          color: white;
+          cursor: pointer;
+          transition: background 0.2s ease;
+        }
+
+        .social-button img {
+          width: 20px;
+          height: 20px;
+        }
+
+        .social-button:hover {
+          background-color: #334155;
         }
 
         .login-links {
-          margin-top: 15px;
+          margin-top: 20px;
           text-align: center;
           font-size: 14px;
-          color: #003366;
+          color: #94a3b8;
         }
 
         .login-links a {
-          color: #1e90ff; /* Blue links */
+          color: #38bdf8;
           text-decoration: none;
         }
 
         .login-links a:hover {
           text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+          .headline {
+            font-size: 28px;
+          }
+
+          .login-content {
+            padding: 30px 20px;
+          }
         }
       `}</style>
     </>

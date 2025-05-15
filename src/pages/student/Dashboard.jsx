@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-// If credential matches, then student redirect here.
-// Student Dashboard
+import { motion, AnimatePresence } from 'framer-motion';
+
 export function Dashboard() {
-  // Hooks
   const [availableCourses, setAvailableCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [enrollingIds, setEnrollingIds] = useState([]);
   const [activeTab, setActiveTab] = useState('available');
+  const [toast, setToast] = useState(null);  // State to manage toast notifications
   const location = useLocation();
   const studentEmail = location.state?.userEmail || "";
+  const studentName = studentEmail.split('@')[0];
 
   useEffect(() => {
-    console.log("Email used in fetchCourses:", studentEmail);
     fetchCourses();
   }, []);
 
@@ -37,6 +37,13 @@ export function Dashboard() {
     }
   };
 
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(null); // Hide toast after 3 seconds
+    }, 3000);
+  };
+
   const handleEnroll = async (courseId) => {
     if (enrollingIds.includes(courseId)) return;
     setEnrollingIds(prev => [...prev, courseId]);
@@ -47,16 +54,16 @@ export function Dashboard() {
         body: JSON.stringify({ email: studentEmail, courseId })
       });
       if (res.ok) {
-        alert('Successfully enrolled in course!');
-        fetchCourses(); 
+        showToast('Successfully enrolled in course!');
+        fetchCourses();
       } else {
         const errorData = await res.json();
-        alert(errorData.message || 'Failed to enroll');
+        showToast(errorData.message || 'Failed to enroll', 'error');
       }
     } catch (error) {
       console.error('Error during enrollment:', error);
+      showToast('An error occurred during enrollment. Please try again.', 'error');
     } finally {
-      // No matter error happens or not, this statement execute
       setEnrollingIds(prev => prev.filter(id => id !== courseId));
     }
   };
@@ -69,13 +76,14 @@ export function Dashboard() {
         body: JSON.stringify({ email: studentEmail, courseId })
       });
       if (res.ok) {
-        alert('Successfully unenrolled!');
-        fetchCourses();  
+        showToast('Successfully unenrolled!');
+        fetchCourses();
       } else {
-        alert('Failed to unenroll');
+        showToast('Failed to unenroll', 'error');
       }
     } catch (error) {
       console.error('Error during unenrollment:', error);
+      showToast('An error occurred during unenrollment. Please try again.', 'error');
     }
   };
 
@@ -88,227 +96,305 @@ export function Dashboard() {
     <>
       <header>
         <h1>Student Dashboard</h1>
-        <button onClick={handleLogout}>Logout</button>
+        <div className="top-right">
+          <motion.span
+            className="student-name-header"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Welcome, <strong>{studentName}</strong>
+          </motion.span>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleLogout}
+          >
+            Logout
+          </motion.button>
+        </div>
       </header>
 
       <div className="layout">
-      {/* Student Sidebar */}
         <aside>
           <h2>Dashboard</h2>
-          <button onClick={() => setActiveTab('available')} className={activeTab === 'available' ? 'active' : ''}>Available Courses</button>
-          <button onClick={() => setActiveTab('enrolled')} className={activeTab === 'enrolled' ? 'active' : ''}>My Enrolled Courses</button>
+          <button
+            onClick={() => setActiveTab('available')}
+            className={activeTab === 'available' ? 'active' : ''}
+          >
+            Available Courses
+          </button>
+          <button
+            onClick={() => setActiveTab('enrolled')}
+            className={activeTab === 'enrolled' ? 'active' : ''}
+          >
+            My Enrolled Courses
+          </button>
         </aside>
 
         <main>
           {loading ? (
             <div className="loading-indicator">Loading...</div>
-          ) : activeTab === 'available' ? (
-            <>
-              <h2>Available Courses</h2>
-              <div className="course-grid">
-                {availableCourses.length === 0 ? (
-                  <p>No courses available for you right now.</p>
-                ) : (
-                  availableCourses.map(course => {
-                    const isFull = course.filledSlots >= course.totalSlots;
-                    const isEnrolled = enrolledCourses.some(c => c.id === course.id);
-                    const isEnrolling = enrollingIds.includes(course.id);
-                    return (
-                      <div key={course.id} className={`course-card ${isFull ? 'full' : isEnrolled ? 'enrolled' : 'available'}`}>
-                        <h3>{course.name}</h3>
-                        <p><strong>Duration:</strong> {course.duration}</p>
-                        <p><strong>Total Slots:</strong> {course.totalSlots}</p>
-                        <p><strong>Remaining:</strong> {course.totalSlots - course.filledSlots}</p>
-                        {isFull ? (
-                          <span>Course Full</span>
-                        ) : isEnrolled ? (
-                          <button disabled>Enrolled</button>
-                        ) : (
-                          <button onClick={() => handleEnroll(course.id)} disabled={isEnrolling}>
-                            {isEnrolling ? 'Enrolling...' : 'Enroll'}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </>
           ) : (
-            <>
-              <h2>My Enrolled Courses</h2>
-              <div className="enrolled-grid">
-                {enrolledCourses.length === 0 ? (
-                  <p>You are not enrolled in any courses.</p>
-                ) : (
-                  enrolledCourses.map(course => (
-                    <div key={course.id} className="enrolled-card">
-                      <span>{course.name}</span>
-                      <button onClick={() => handleUnenroll(course.id)}>Unenroll</button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </>
+            <AnimatePresence mode="wait">
+              {activeTab === 'available' ? (
+                <motion.div
+                  key="available"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h2>Available Courses</h2>
+                  <div className="course-grid">
+                    {availableCourses.length === 0 ? (
+                      <p>No courses available for you right now.</p>
+                    ) : (
+                      availableCourses.map(course => {
+                        const isFull = course.filledSlots >= course.totalSlots;
+                        const isEnrolled = enrolledCourses.some(c => c.id === course.id);
+                        const isEnrolling = enrollingIds.includes(course.id);
+                        return (
+                          <div
+                            key={course.id}
+                            className={`course-card ${isFull ? 'full' : isEnrolled ? 'enrolled' : 'available'}`}
+                          >
+                            <h3>{course.name}</h3>
+                            <p><strong>Duration:</strong> {course.duration}</p>
+                            <p><strong>Total Slots:</strong> {course.totalSlots}</p>
+                            <p><strong>Remaining:</strong> {course.totalSlots - course.filledSlots}</p>
+                            {isFull ? (
+                              <span>Course Full</span>
+                            ) : isEnrolled ? (
+                              <button disabled>Enrolled</button>
+                            ) : (
+                              <motion.button
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => handleEnroll(course.id)}
+                                disabled={isEnrolling}
+                              >
+                                {isEnrolling ? 'Enrolling...' : 'Enroll'}
+                              </motion.button>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="enrolled"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h2>My Enrolled Courses</h2>
+                  <div className="enrolled-grid">
+                    {enrolledCourses.length === 0 ? (
+                      <p>You are not enrolled in any courses.</p>
+                    ) : (
+                      enrolledCourses.map(course => (
+                        <div key={course.id} className="enrolled-card">
+                          <span>{course.name}</span>
+                          <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => handleUnenroll(course.id)}
+                          >
+                            Unenroll
+                          </motion.button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
         </main>
       </div>
 
-    <style>{`
-  body {
-    font-family: 'Inter', sans-serif;
-    background-color: #F0FAFF; /* light blue background from Add Course */
-    margin: 0;
-    padding: 0;
-  }
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`toast ${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
 
-  header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 70px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #2196F3; /* solid blue from Add Course */
-    color: white;
-    padding: 0 20px;
-    font-size: 18px;
-    z-index: 1000;
-  }
+      <style>{`
+        body {
+          font-family: 'Inter', sans-serif;
+          background-color: #0f0f11;
+          margin: 0;
+          padding: 0;
+          color: white;
+        }
 
-  button {
-    background-color: #F44336; /* solid red from Add Course */
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
+        header {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 70px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background-color: #2196F3;
+          color: white;
+          padding: 0 20px;
+          font-size: 18px;
+          z-index: 1000;
+        }
 
-  button:hover {
-    background-color: #D32F2F; /* darker red for hover */
-  }
+        .top-right {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
 
-  .layout {
-    display: flex;
-    min-height: 100vh;
-    padding-top: 70px;
-  }
+        .student-name-header {
+          font-size: 16px;
+          color: #facc15;
+        }
 
-  aside {
-    position: fixed;
-    top: 70px;
-    left: 0;
-    width: 260px;
-    background: #DFF6FF; /* light blue from Add Course */
-    color: #1A1A1A;
-    padding: 30px 20px;
-    height: calc(100vh - 70px);
-    z-index: 999;
-  }
+        button {
+          padding: 10px 20px;
+          border-radius: 8px;
+          color: white;
+          cursor: pointer;
+          font-weight: bold;
+          background: linear-gradient(to right, #3b82f6, #06b6d4);
+          border: none;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
 
-  aside button {
-    background: transparent;
-    color: #4CAF50; /* green accent from Add Course */
-    border: none;
-    padding: 12px;
-    margin-bottom: 16px;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-  }
+        button:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
 
-  aside button.active {
-    background-color: #4CAF50; /* solid green from Add Course */
-    color: white;
-    font-weight: bold;
-    border-radius: 6px;
-  }
+        .layout {
+          display: flex;
+          min-height: 100vh;
+          padding-top: 70px;
+        }
 
-  main {
-    flex: 1;
-    margin-left: 300px;
-    padding: 50px 40px;
-    background: #FFFFFF; /* white background for main content */
-    height: calc(100vh - 70px);
-    overflow-y: auto;
-  }
+        aside {
+          position: fixed;
+          top: 70px;
+          left: 0;
+          width: 260px;
+          background: #1e293b;
+          color: white;
+          padding: 30px 20px;
+          height: calc(100vh - 70px);
+        }
 
-  .course-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 24px;
-  }
+        aside button {
+          background: transparent;
+          color: #38bdf8;
+          border: none;
+          padding: 12px;
+          margin-bottom: 16px;
+          font-size: 16px;
+          transition: background-color 0.3s ease;
+        }
 
-  .course-card {
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
+        aside button.active {
+          background-color: #38bdf8;
+          color: white;
+          font-weight: bold;
+          border-radius: 6px;
+        }
 
-  .course-card:hover {
-    transform: translateY(-5px);
-  }
+        main {
+          flex: 1;
+          margin-left: 300px;
+          padding: 50px 40px;
+          background: #1e293b;
+          height: calc(100vh - 70px);
+          overflow-y: auto;
+        }
 
-  .course-card.full {
-    background-color: #fef2f2;
-    border: 1px solid #fca5a5;
-    color: #b91c1c;
-  }
+        .course-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 24px;
+        }
 
-  .course-card.enrolled {
-    background-color: #ecfdf5;
-    border: 1px solid #6ee7b7;
-    color: #065f46;
-  }
+        .course-card {
+          background: #2e3b4e;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+          color: #ffffff;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
 
-  .course-card.available {
-    background-color: #ffffff;
-    border: 1px solid #e5e7eb;
-    color: #1f2937;
-  }
+        .course-card.full {
+          background-color: #fef2f2;
+          border: 1px solid #fca5a5;
+          color: #b91c1c;
+        }
 
-  .course-card.full button,
-  .course-card.enrolled button {
-    background-color: #d1d5db;
-    color: #6b7280;
-    cursor: not-allowed;
-  }
+        .course-card.enrolled {
+          background-color: #f5d0c5;
+          border: 2px solid #f87171;
+          color: #991b1b;
+        }
 
-  .enrolled-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-  }
+        .enrolled-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 20px;
+        }
 
-  .enrolled-card {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+        .enrolled-card {
+          background-color: #2e3b4e;
+          color: #ffffff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
 
-  button[disabled] {
-    background-color: #A2A2A2;
-    cursor: not-allowed;
-  }
+        .loading-indicator {
+          color: #38bdf8;
+          font-size: 18px;
+          text-align: center;
+        }
 
-  .loading-indicator {
-    text-align: center;
-    font-size: 20px;
-    color: #2196F3;
-  }
-`}</style>
+        /* Toast notification */
+        .toast {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: rgba(0, 0, 0, 0.7);
+          padding: 10px 20px;
+          border-radius: 8px;
+          color: white;
+          font-size: 16px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+          transition: opacity 0.3s ease;
+          z-index: 1000;
+        }
+
+        .toast.success {
+          background-color: #4caf50;
+        }
+
+        .toast.error {
+          background-color: #f44336;
+        }
+      `}</style>
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// Forgot password
+
 export function Forgot() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -14,7 +14,6 @@ export function Forgot() {
     const data = { email, currentPassword, newPassword, role };
 
     try {
-      
       const response = await fetch(`http://localhost:8088/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,16 +36,16 @@ export function Forgot() {
 
   return (
     <>
-      <div className="login-container">
-        <div className="login-card">
-          <h2 className="login-title">Reset Your Password</h2>
+      <div className="wrapper">
+        <div className="blur-bg"></div>
+        <div className="login-content">
+          <h1 className="headline">Reset Your <span className="highlight">Password</span></h1>
 
-          <form onSubmit={handleForgotPassword} className="login-form">
+          <form className="login-form" onSubmit={handleForgotPassword}>
             <div className="form-group">
               <label>Email</label>
               <input
                 type="email"
-                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -57,7 +56,6 @@ export function Forgot() {
               <label>Current Password</label>
               <input
                 type="password"
-                placeholder="Enter current password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
@@ -68,7 +66,6 @@ export function Forgot() {
               <label>New Password</label>
               <input
                 type="password"
-                placeholder="Enter new password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
@@ -93,44 +90,71 @@ export function Forgot() {
       </div>
 
       <style>{`
-        html, body {
+        * {
           margin: 0;
           padding: 0;
-          height: 100%;
-          font-family: 'Inter', sans-serif;
+          box-sizing: border-box;
         }
 
-        .login-container {
+        body, html {
+          height: 100%;
+          font-family: 'Inter', sans-serif;
+          background-color: #0f0f11;
+          color: white;
+        }
+
+        .wrapper {
+          height: 100vh;
           width: 100%;
-          min-height: 100vh;
-          background: linear-gradient(to top right, #003366, #3366cc);
           display: flex;
           justify-content: center;
           align-items: center;
-          padding: 20px;
+          background: radial-gradient(circle at top left, #1e1e26, #0f0f11);
+          position: relative;
+          overflow: hidden;
         }
 
-        .login-card {
-          background-color: #ffffff;
-          padding: 30px;
-          border-radius: 12px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        .blur-bg {
+          position: absolute;
+          top: -200px;
+          left: -200px;
+          width: 600px;
+          height: 600px;
+          background: #3b82f6;
+          opacity: 0.2;
+          filter: blur(150px);
+          z-index: 0;
+        }
+
+        .login-content {
+          z-index: 10;
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          padding: 40px;
           width: 100%;
           max-width: 400px;
         }
 
-        .login-title {
-          font-size: 24px;
-          font-weight: 700;
+        .headline {
+          font-size: 32px;
+          font-weight: 800;
+          margin-bottom: 30px;
           text-align: center;
-          margin-bottom: 20px;
-          color: #003366;
+          background: linear-gradient(to right, #3b82f6, #06b6d4);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .highlight {
+          color: #38bdf8;
         }
 
         .login-form {
           display: flex;
           flex-direction: column;
-          gap: 15px;
+          gap: 20px;
         }
 
         .form-group {
@@ -139,56 +163,65 @@ export function Forgot() {
         }
 
         .form-group label {
-          margin-bottom: 5px;
-          color: #555;
+          margin-bottom: 6px;
+          color: #cbd5e1;
         }
 
         .form-group input,
         .form-group select {
           padding: 12px;
-          border: 1px solid #cccccc;
-          border-radius: 8px;
-          font-size: 14px;
-          color: #003366;
-          background-color: #f4f4f4;
-          transition: border-color 0.3s;
+          border: 1px solid #475569;
+          border-radius: 10px;
+          background-color: #1e293b;
+          color: white;
         }
 
         .form-group input:focus,
         .form-group select:focus {
-          border-color: #1e90ff;
           outline: none;
+          border-color: #38bdf8;
         }
 
         .login-button {
-          padding: 12px;
-          background-color: #1e90ff;
-          color: white;
-          font-weight: bold;
+          padding: 14px;
+          background: linear-gradient(to right, #3b82f6, #06b6d4);
           border: none;
-          border-radius: 8px;
+          border-radius: 10px;
+          font-weight: bold;
+          color: white;
           cursor: pointer;
-          transition: background-color 0.3s ease;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .login-button:hover {
-          background-color: #4682b4;
+          transform: translateY(-3px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
 
         .login-links {
-          margin-top: 15px;
+          margin-top: 20px;
           text-align: center;
           font-size: 14px;
-          color: #003366;
+          color: #94a3b8;
         }
 
         .login-links a {
-          color: #1e90ff;
+          color: #38bdf8;
           text-decoration: none;
         }
 
         .login-links a:hover {
           text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+          .headline {
+            font-size: 24px;
+          }
+
+          .login-content {
+            padding: 30px 20px;
+          }
         }
       `}</style>
     </>

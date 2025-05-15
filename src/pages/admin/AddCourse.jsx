@@ -57,18 +57,31 @@ export function AddCourse() {
     }
   };
 
-  const handleDelete = async (courseId) => {
-    if (window.confirm("Are you sure you want to delete this course?")) {
-      try {
-        await axios.delete(`http://localhost:8088/api/courses/delete-course-by-id?courseId=${courseId}`);
+ const handleDelete = async (courseId) => {
+  if (window.confirm("Are you sure you want to delete this course?")) {
+    try {
+      const response = await axios.delete(`http://localhost:8088/api/courses/delete-course-by-id?courseId=${courseId}`);
+      
+      if (response.data === "Course deleted successfully.") {
         setAvailableCourses(prev => prev.filter(course => course.id !== courseId));
         alert("Course deleted successfully!");
-      } catch (error) {
-        console.error("Error deleting course:", error);
+      } else {
+        alert(response.data); // Show the specific reason returned from backend
+      }
+
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      
+      // Handle possible backend failure message
+      if (error.response && error.response.data) {
+        alert(error.response.data);
+      } else {
         alert("Failed to delete course.");
       }
     }
-  };
+  }
+};
+
 
   const handleStudentRemove = async (email) => {
     if (window.confirm(`Are you sure you want to remove student: ${email}?`)) {
@@ -280,13 +293,13 @@ export function AddCourse() {
           )}
         </main>
       </div>
-  <style>{`
+<style>{`
   body {
     font-family: 'Inter', sans-serif;
-    background-color: #F0FAFF; /* light blue background */
+    background-color: #1e293b; /* dark background */
     margin: 0;
     padding: 0;
-    color: #212121;
+    color: white; /* white text color for better contrast */
   }
 
   header {
@@ -298,11 +311,10 @@ export function AddCourse() {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #2196F3; /* solid blue */
-    color: #ffffff;
+    background-color: #2196F3; /* blue header */
+    color: white;
     padding: 0 20px;
     font-size: 18px;
-    font-weight: 600;
     z-index: 1000;
   }
 
@@ -310,19 +322,31 @@ export function AddCourse() {
     margin: 0;
   }
 
+  .top-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .student-name-header {
+    font-size: 16px;
+    color: #facc15; /* yellow accent color */
+  }
+
   button {
-    background: #F44336; /* solid red */
-    border: none;
     padding: 10px 20px;
     border-radius: 8px;
     color: white;
-    font-weight: bold;
     cursor: pointer;
-    transition: opacity 0.3s ease;
+    font-weight: bold;
+    background: linear-gradient(to right, #3b82f6, #06b6d4); /* gradient button color */
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
   button:hover {
-    opacity: 0.85;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
   }
 
   .layout {
@@ -336,32 +360,24 @@ export function AddCourse() {
     top: 70px;
     left: 0;
     width: 260px;
-    background: #DFF6FF; /* light blue */
-    color: #1A1A1A;
+    background: #1e293b; /* dark background for aside */
+    color: white;
     padding: 30px 20px;
     height: calc(100vh - 70px);
-    z-index: 999;
-  }
-
-  aside h2 {
-    font-size: 24px;
-    margin-bottom: 16px;
   }
 
   aside button {
     background: transparent;
-    color: #4CAF50; /* green accent */
+    color: #38bdf8; /* blue accent color for button */
     border: none;
     padding: 12px;
     margin-bottom: 16px;
     font-size: 16px;
-    text-align: left;
-    width: 100%;
     transition: background-color 0.3s ease;
   }
 
   aside button.active {
-    background: #4CAF50; /* solid green */
+    background-color: #38bdf8;
     color: white;
     font-weight: bold;
     border-radius: 6px;
@@ -371,34 +387,26 @@ export function AddCourse() {
     flex: 1;
     margin-left: 300px;
     padding: 50px 40px;
-    background: #FFFFFF;
+    background: #1e293b; /* dark background for main content */
     height: calc(100vh - 70px);
     overflow-y: auto;
   }
 
- .form-box-enrolledStudent {
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  .form-box{
-    background: white;
+  .form-box, .form-box-enrolledStudent {
+    background: #2e3b4e; /* dark card background */
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
     width: 50%;
     max-width: 800px;
     margin: 0 auto;
+    color: white; /* white text color for forms */
   }
 
   .form-title {
     font-size: 24px;
     font-weight: bold;
-    color: #F44336; /* red title */
+    color: #F44336; /* red title for emphasis */
     margin-bottom: 24px;
     text-align: center;
   }
@@ -415,6 +423,8 @@ export function AddCourse() {
     border: 1px solid #2196F3; /* blue border */
     border-radius: 8px;
     transition: border-color 0.3s;
+    color: white; /* white text color in input fields */
+    background: #2e3b4e; /* dark background for input fields */
   }
 
   .input-field:focus {
@@ -423,7 +433,7 @@ export function AddCourse() {
   }
 
   .submit-button {
-    background: #4CAF50; /* green */
+    background: #4CAF50; /* green button */
     color: white;
     padding: 12px;
     font-size: 16px;
@@ -441,7 +451,7 @@ export function AddCourse() {
   .course-title {
     font-size: 22px;
     font-weight: bold;
-    color: #F44336; /* red */
+    color: #F44336; /* red title for course */
     margin-bottom: 20px;
     text-align: center;
   }
@@ -454,13 +464,14 @@ export function AddCourse() {
   }
 
   .student-card {
-    background-color: #ffffff;
+    background-color: #2e3b4e; /* dark background for student cards */
     border-radius: 12px;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
     padding: 20px;
     width: 280px;
     transition: transform 0.2s;
     text-align: center;
+    color: #ffffff; /* white text for card */
   }
 
   .student-card:hover {
@@ -470,13 +481,11 @@ export function AddCourse() {
   .student-card h4 {
     margin-top: 0;
     font-size: 18px;
-    color: #212121;
   }
 
   .student-card p {
     margin: 6px 0;
     font-size: 14px;
-    color: #555;
   }
 
   .student-table {
@@ -489,11 +498,12 @@ export function AddCourse() {
     padding: 12px;
     text-align: left;
     border: 1px solid #ddd;
+    color: white; /* white text inside the table */
   }
 
   .student-table th {
-    background-color: #4CAF50; /* solid green header */
-    color: #ffffff;
+    background-color: #4CAF50; /* green header */
+    color: white;
   }
 
   .pagination {
@@ -504,7 +514,7 @@ export function AddCourse() {
   }
 
   .pagination button {
-    background: #F44336; /* solid red */
+    background: #F44336; /* red button */
     color: white;
     padding: 8px 16px;
     border-radius: 8px;
@@ -519,45 +529,30 @@ export function AddCourse() {
     cursor: not-allowed;
   }
 
-.student-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 20px;
-        }
+  /* Toast notification */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+  }
 
-        .student-table th, .student-table td {
-          padding: 12px;
-          text-align: left;
-          border: 1px solid #ddd;
-        }
+  .toast.success {
+    background-color: #4caf50;
+  }
 
-        .student-table th {
-          background-color: #4CAF50;
-          color: #ffffff;
-        }
+  .toast.error {
+    background-color: #f44336;
+  }
 
-        .pagination {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-top: 20px;
-        }
-
-        .pagination button {
-          background: #F44336;
-          color: white;
-          padding: 8px 16px;
-          border-radius: 8px;
-          border: none;
-          cursor: pointer;
-          font-weight: 600;
-        }
-
-        .pagination button:disabled {
-          background-color: #eee;
-          color: #999;
-          cursor: not-allowed;
-        }
   @media (max-width: 480px) {
     .layout {
       flex-direction: column;
@@ -579,7 +574,6 @@ export function AddCourse() {
     }
   }
 `}</style>
-
     </>
   );
 }
