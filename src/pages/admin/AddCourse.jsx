@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-// Admin Credential matches, then this is page where admin redirect
-// Admin Dashboard
+import AdminUnenrollRequests from "./AdminUnenrollRequests"; 
+
 export function AddCourse() {
-  // Hooks
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
@@ -18,28 +17,21 @@ export function AddCourse() {
   const [availableCourses, setAvailableCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Page Count, Show 5 student list at a time, then remaining goes next page
-  const studentsPerPage = 5; 
+  const studentsPerPage = 5;
 
   useEffect(() => {
-    if (view === "students" || view === "remove-student") {
+    if (["students", "remove-student"].includes(view)) {
       axios.get("http://localhost:8088/api/courses/enrollments-list-all")
-        .then((response) => {
-          setEnrolledStudents(response.data);
-        })
-        .catch((error) => console.error("Error fetching enrolled students:", error));
+        .then((res) => setEnrolledStudents(res.data))
+        .catch((err) => console.error("Error fetching students:", err));
     } else if (view === "remove") {
       axios.get("http://localhost:8088/api/courses/available")
-        .then((response) => setAvailableCourses(response.data))
-        .catch((error) => console.error("Error fetching courses:", error));
+        .then((res) => setAvailableCourses(res.data))
+        .catch((err) => console.error("Error fetching courses:", err));
     }
   }, [view]);
 
-  const handleChange = (e) => {
-    // Using Spread Operator to change the state
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,66 +41,49 @@ export function AddCourse() {
         totalSlots: parseInt(form.totalSlots),
         filledSlots: parseInt(form.filledSlots)
       });
-      alert("Course added successfully!");
+      alert("Course added!");
       setForm({ name: "", duration: "", session: "", totalSlots: "", filledSlots: "" });
     } catch (err) {
-      console.error("Error adding course:", err);
-      alert("Failed to add course.");
+      console.error(err);
+      alert("Error adding course");
     }
   };
 
- const handleDelete = async (courseId) => {
-  if (window.confirm("Are you sure you want to delete this course?")) {
-    try {
-      const response = await axios.delete(`http://localhost:8088/api/courses/delete-course-by-id?courseId=${courseId}`);
-      
-      if (response.data === "Course deleted successfully.") {
-        setAvailableCourses(prev => prev.filter(course => course.id !== courseId));
-        alert("Course deleted successfully!");
-      } else {
-        alert(response.data); // Show the specific reason returned from backend
-      }
-
-    } catch (error) {
-      console.error("Error deleting course:", error);
-      
-      // Handle possible backend failure message
-      if (error.response && error.response.data) {
-        alert(error.response.data);
-      } else {
+  const handleDelete = async (id) => {
+    if (window.confirm("Delete this course?")) {
+      try {
+        const res = await axios.delete(`http://localhost:8088/api/courses/delete-course-by-id?courseId=${id}`);
+        if (res.data === "Course deleted successfully.") {
+          setAvailableCourses(prev => prev.filter(c => c.id !== id));
+          alert("Deleted");
+        } else alert(res.data);
+      } catch (err) {
         alert("Failed to delete course.");
       }
     }
-  }
-};
-
+  };
 
   const handleStudentRemove = async (email) => {
-    if (window.confirm(`Are you sure you want to remove student: ${email}?`)) {
+    if (window.confirm(`Remove student ${email}?`)) {
       try {
         await axios.delete(`http://localhost:8088/api/courses/remove-student?studentEmail=${email}`);
-        setEnrolledStudents(prev => prev.filter(student => student.studentEmail !== email));
-        alert("Student removed successfully!");
-      } catch (error) {
-        console.error("Error removing student:", error);
-        alert("Failed to remove student.");
+        setEnrolledStudents(prev => prev.filter(s => s.studentEmail !== email));
+        alert("Removed");
+      } catch (err) {
+        alert("Failed to remove student");
       }
     }
   };
-   
-  const handleLogout = () => {
-    // redirect to role selection page
-    navigate("/");
-  };
 
-  const filteredStudents = selectedCourse === "All" 
+  const handleLogout = () => navigate("/");
+
+  const filteredStudents = selectedCourse === "All"
     ? enrolledStudents
-    : enrolledStudents.filter(student => student.courseName === selectedCourse);
+    : enrolledStudents.filter(s => s.courseName === selectedCourse);
 
-    // Pagination to filter student list 
   const paginate = (students) => {
-    const startIndex = (currentPage - 1) * studentsPerPage;
-    return students.slice(startIndex, startIndex + studentsPerPage);
+    const start = (currentPage - 1) * studentsPerPage;
+    return students.slice(start, start + studentsPerPage);
   };
 
   const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
@@ -121,13 +96,13 @@ export function AddCourse() {
       </header>
 
       <div className="layout">
-      {/* Admin sidebar */}
         <aside>
           <h2>Dashboard</h2>
           <button className={view === "course" ? "active" : ""} onClick={() => setView("course")}>Add New Course</button>
           <button className={view === "students" ? "active" : ""} onClick={() => setView("students")}>Enrolled Students</button>
           <button className={view === "remove" ? "active" : ""} onClick={() => setView("remove")}>Remove Course</button>
           <button className={view === "remove-student" ? "active" : ""} onClick={() => setView("remove-student")}>Remove Student</button>
+          <button className={view === "unenroll-requests" ? "active" : ""} onClick={() => setView("unenroll-requests")}>Unenroll Requests</button>
         </aside>
 
         <main>
@@ -157,143 +132,142 @@ export function AddCourse() {
               <h2 className="form-title">Enrolled Students</h2>
               <div className="filter-container">
                 <label htmlFor="courseFilter">Filter by Course:</label>
-                <select 
-                  id="courseFilter" 
-                  onChange={(e) => setSelectedCourse(e.target.value)} 
-                  value={selectedCourse}
-                >
+                <select id="courseFilter" onChange={(e) => setSelectedCourse(e.target.value)} value={selectedCourse}>
                   <option value="All">All Courses</option>
-                  {availableCourses.map((course) => (
+                  {availableCourses.map(course => (
                     <option key={course.id} value={course.name}>{course.name}</option>
                   ))}
                 </select>
               </div>
 
-              {filteredStudents.length > 0 ? (
-                <table className="student-table">
-                  <thead>
-                    <tr>
-                      <th>Email</th>
-                      <th>Course</th>
-                      <th>Session</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginate(filteredStudents).map((student, index) => (
-                      <tr key={index}>
-                        <td>{student.studentEmail}</td>
-                        <td>{student.courseName}</td>
-                        <td>{student.session}</td>
+              {filteredStudents.length ? (
+                <>
+                  <table className="student-table">
+                    <thead>
+                      <tr>
+                        <th>Email</th>
+                        <th>Course</th>
+                        <th>Session</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p>No students enrolled yet.</p>
-              )}
-
-              <div className="pagination">
-                <button 
-                  onClick={() => setCurrentPage(currentPage - 1)} 
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </button>
-                <span>Page {currentPage} of {totalPages}</span>
-                <button 
-                  onClick={() => setCurrentPage(currentPage + 1)} 
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </button>
-              </div>
+                    </thead>
+                    <tbody>
+                      {paginate(filteredStudents).map((student, index) => (
+                        <tr key={index}>
+                          <td>{student.studentEmail}</td>
+                          <td>{student.courseName}</td>
+                          <td>{student.session}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="pagination">
+                    <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>Previous</button>
+                    <span>Page {currentPage} of {totalPages}</span>
+                    <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>Next</button>
+                  </div>
+                </>
+              ) : <p>No students enrolled yet.</p>}
             </div>
           )}
 
           {view === "remove" && (
             <div className="form-box-enrolledStudent">
               <h2 className="form-title">Remove Courses</h2>
-              {availableCourses.length > 0 ? (
+              {availableCourses.length ? (
                 <table className="student-table">
                   <thead>
                     <tr>
-                      <th>Course Name</th>
+                      <th>Name</th>
                       <th>Session</th>
                       <th>Duration</th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {availableCourses.map((course, idx) => (
-                      <tr key={idx}>
+                    {availableCourses.map(course => (
+                      <tr key={course.id}>
                         <td>{course.name}</td>
                         <td>{course.session}</td>
                         <td>{course.duration}</td>
-                        <td>
-                          <button onClick={() => handleDelete(course.id)}>Remove</button>
-                        </td>
+                        <td><button onClick={() => handleDelete(course.id)}>Remove</button></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              ) : (
-                <p>No available courses to delete.</p>
-              )}
+              ) : <p>No courses to delete.</p>}
             </div>
           )}
 
           {view === "remove-student" && (
             <div className="form-box-enrolledStudent">
               <h2 className="form-title">Remove Students</h2>
-              {enrolledStudents.length > 0 ? (
-                <table className="student-table">
-                  <thead>
-                    <tr>
-                      <th>Email</th>
-                      <th>Course</th>
-                      <th>Session</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginate(enrolledStudents).map((student, index) => (
-                      <tr key={index}>
-                        <td>{student.studentEmail}</td>
-                        <td>{student.courseName}</td>
-                        <td>{student.session}</td>
-                        <td>
-                          <button onClick={() => handleStudentRemove(student.studentEmail)} style={{ backgroundColor: "#F44336", color: "#fff" }}>
-                            Remove
-                          </button>
-                        </td>
+              {enrolledStudents.length ? (
+                <>
+                  <table className="student-table">
+                    <thead>
+                      <tr>
+                        <th>Email</th>
+                        <th>Course</th>
+                        <th>Session</th>
+                        <th>Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p>No students to remove.</p>
-              )}
+                    </thead>
+                    <tbody>
+                      {paginate(enrolledStudents).map((student, index) => (
+                        <tr key={index}>
+                          <td>{student.studentEmail}</td>
+                          <td>{student.courseName}</td>
+                          <td>{student.session}</td>
+                          <td>
+                            <button
+                              onClick={() => handleStudentRemove(student.studentEmail)}
+                              style={{ backgroundColor: "#F44336", color: "#fff" }}>
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="pagination">
+                    <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>Previous</button>
+                    <span>Page {currentPage} of {totalPages}</span>
+                    <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>Next</button>
+                  </div>
+                </>
+              ) : <p>No students to remove.</p>}
+            </div>
+          )}
 
-              <div className="pagination">
-                <button 
-                  onClick={() => setCurrentPage(currentPage - 1)} 
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </button>
-                <span>Page {currentPage} of {totalPages}</span>
-                <button 
-                  onClick={() => setCurrentPage(currentPage + 1)} 
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </button>
-              </div>
+          {view === "unenroll-requests" && (
+            <div className="form-box-enrolledStudent">
+              <AdminUnenrollRequests />
             </div>
           )}
         </main>
       </div>
 <style>{`
+.form-box-enrolledStudent {
+  background: #2e3b4e;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  width: 90%;
+  max-width: 1000px;
+  margin: 0 auto;
+  color: white;
+}
+
+.student-table th, .student-table td {
+  padding: 12px;
+  border: 1px solid #ccc;
+  color: white;
+}
+
+.student-table th {
+  background-color: #4CAF50;
+}
+
   body {
     font-family: 'Inter', sans-serif;
     background-color: #1e293b; /* dark background */

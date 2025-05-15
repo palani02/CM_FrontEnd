@@ -7,8 +7,9 @@ export function Dashboard() {
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [enrollingIds, setEnrollingIds] = useState([]);
+  const [unenrollingIds, setUnenrollingIds] = useState([]); // For tracking unenroll requests
   const [activeTab, setActiveTab] = useState('available');
-  const [toast, setToast] = useState(null);  // State to manage toast notifications
+  const [toast, setToast] = useState(null);
   const location = useLocation();
   const studentEmail = location.state?.userEmail || "";
   const studentName = studentEmail.split('@')[0];
@@ -40,7 +41,7 @@ export function Dashboard() {
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => {
-      setToast(null); // Hide toast after 3 seconds
+      setToast(null);
     }, 3000);
   };
 
@@ -67,25 +68,38 @@ export function Dashboard() {
       setEnrollingIds(prev => prev.filter(id => id !== courseId));
     }
   };
+const handleUnenroll = async (courseId) => {
+  if (unenrollingIds.includes(courseId)) return;
 
-  const handleUnenroll = async (courseId) => {
-    try {
-      const res = await fetch('http://localhost:8088/api/courses/unenroll', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: studentEmail, courseId })
-      });
-      if (res.ok) {
-        showToast('Successfully unenrolled!');
+  setUnenrollingIds(prev => [...prev, courseId]);
+
+  try {
+    const res = await fetch('http://localhost:8088/api/courses/unenroll', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: studentEmail, courseId })
+    });
+
+    if (res.ok) {
+      showToast('Unenrollment request submitted successfully.');
+      // Delay course refresh so the button stays "Request Sent" for a bit
+      setTimeout(() => {
+        // Ensuring we update unenrollingIds properly after the course list is refreshed
         fetchCourses();
-      } else {
-        showToast('Failed to unenroll', 'error');
-      }
-    } catch (error) {
-      console.error('Error during unenrollment:', error);
-      showToast('An error occurred during unenrollment. Please try again.', 'error');
+        setUnenrollingIds(prev => prev.filter(id => id !== courseId));
+      }, 2000); // 2 seconds delay before refreshing the courses
+    } else {
+      const errorData = await res.json();
+      showToast(errorData.message || 'Failed to submit unenrollment request.', 'error');
     }
-  };
+  } catch (error) {
+    console.error('Error during unenrollment request:', error);
+    showToast('An error occurred during unenrollment request. Please try again.', 'error');
+  }
+};
+
+
+
 
   const handleLogout = () => {
     localStorage.removeItem('userEmail');
@@ -194,21 +208,27 @@ export function Dashboard() {
                   <h2>My Enrolled Courses</h2>
                   <div className="enrolled-grid">
                     {enrolledCourses.length === 0 ? (
-                      <p>You are not enrolled in any courses.</p>
-                    ) : (
-                      enrolledCourses.map(course => (
-                        <div key={course.id} className="enrolled-card">
-                          <span>{course.name}</span>
-                          <motion.button
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={() => handleUnenroll(course.id)}
-                          >
-                            Unenroll
-                          </motion.button>
-                        </div>
-                      ))
-                    )}
+  <p>You are not enrolled in any courses.</p>
+) : (
+  enrolledCourses.map(course => (
+    <div key={course.id} className="enrolled-card">
+      <span>{course.name}</span>
+      <motion.button
+  whileHover={{ scale: 1.03 }}
+  whileTap={{ scale: 0.97 }}
+  onClick={() => handleUnenroll(course.id)}
+  disabled={unenrollingIds.includes(course.id)}  // Disable button during unenrollment
+  style={{
+    backgroundColor: unenrollingIds.includes(course.id) ? '#4CAF50' : '', // Green color for "Request Sent"
+  }}
+>
+  {unenrollingIds.includes(course.id) ? 'Request Sent' : 'Unenroll'}
+</motion.button>
+
+    </div>
+  ))
+)}
+
                   </div>
                 </motion.div>
               )}
@@ -225,6 +245,10 @@ export function Dashboard() {
       )}
 
       <style>{`
+      button:disabled {
+          background: #ccc;
+          cursor: not-allowed;
+        }
         body {
           font-family: 'Inter', sans-serif;
           background-color: #0f0f11;
